@@ -17,6 +17,13 @@ on:
 # whenever you add changes to Android CI build action ('build-rustdesk-android')
 # in this file!
 
+# 关键：添加全局权限配置，作用于所有 Job
+permissions:
+  contents: write  # 允许创建/修改 Release（解决 403 的核心权限）
+  actions: read    # 允许读取 Action 缓存、运行时信息（可选，按需保留）
+  checks: write    # 允许上报构建状态（可选，按需保留）
+  pull-requests: read # 允许读取 PR 信息（可选，按需保留）
+
 env:
   SCITER_RUST_VERSION: "1.75" # https://github.com/rustdesk/rustdesk/discussions/7503, also 1.78 has ABI change which causes our sciter version not working, https://blog.rust-lang.org/2024/03/30/i128-layout-update.html
   RUST_VERSION: "1.75" # sciter failed on m1 with 1.78 because of https://blog.rust-lang.org/2024/03/30/i128-layout-update.html
@@ -1807,9 +1814,11 @@ jobs:
       - name: Publish debian package
         if: env.UPLOAD_ARTIFACT == 'true'
         uses: softprops/action-gh-release@v1
+        
         with:
           prerelease: true
           tag_name: ${{ env.TAG_NAME }}
+          token: ${{ secrets.RELEASE_PAT }}
           files: |
             rustdesk-${{ env.VERSION }}-${{ matrix.job.arch }}-sciter.deb
 
