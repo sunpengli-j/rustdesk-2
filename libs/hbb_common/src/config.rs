@@ -934,6 +934,31 @@ impl Config {
         config.store();
     }
 
+    /// Force confirm key for troubleshooting purposes
+    pub fn force_confirm_key() {
+        let mut config = CONFIG.write().unwrap();
+        config.key_confirmed = true;
+        config.store();
+        log::info!("Key confirmation forced");
+    }
+
+    /// Force confirm host key for troubleshooting purposes
+    pub fn force_confirm_host_key(host: &str) {
+        let mut config = CONFIG.write().unwrap();
+        config.keys_confirmed.insert(host.to_owned(), true);
+        config.store();
+        log::info!("Host key confirmation forced for: {}", host);
+    }
+
+    /// Reset key confirmation status (useful for debugging)
+    pub fn reset_key_confirmation() {
+        let mut config = CONFIG.write().unwrap();
+        config.key_confirmed = false;
+        config.keys_confirmed = Default::default();
+        config.store();
+        log::info!("Key confirmation status reset");
+    }
+
     pub fn get_key_pair() -> KeyPair {
         // lock here to make sure no gen_keypair more than once
         // no use of CONFIG directly here to ensure no recursive calling in Config::load because of password dec which calling this function
