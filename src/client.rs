@@ -3947,6 +3947,18 @@ pub mod peer_online {
     async fn create_online_stream() -> ResultType<Stream> {
         let (rendezvous_server, _servers, _contained) =
             crate::get_rendezvous_server(READ_TIMEOUT).await;
+        
+        // First try with WebSocket if enabled
+        if let Ok(stream) = try_connect_online_stream(&rendezvous_server).await {
+            return Ok(stream);
+        }
+        
+        // Fallback to direct TCP connection without WebSocket
+        log::debug!("WebSocket connection failed, falling back to direct TCP connection");
+        try_connect_online_stream_direct(&rendezvous_server).await
+    }
+    
+    async fn try_connect_online_stream(rendezvous_server: &str) -> ResultType<Stream> {
         let tmp: Vec<&str> = rendezvous_server.split(":").collect();
         if tmp.len() != 2 {
             bail!("Invalid server address: {}", rendezvous_server);
@@ -3957,6 +3969,20 @@ pub mod peer_online {
         }
         let online_server = format!("{}:{}", tmp[0], port - 1);
         connect_tcp(online_server, CONNECT_TIMEOUT).await
+    }
+    
+    async fn try_connect_online_stream_direct(rendezvous_server: &str) -> ResultType<Stream> {
+        let tmp: Vec<&str> = rendezvous_server.split(":").collect();
+        if tmp.len() != 2 {
+            bail!("Invalid server address: {}", rendezvous_server);
+        }
+        let port: u16 = tmp[1].parse()?;
+        if port == 0 {
+            bail!("Invalid server address: {}", rendezvous_server);
+        }
+        let online_server = format!("{}:{}", tmp[0], port - 1);
+        // Use direct TCP connection without WebSocket conversion
+        connect_tcp_local(online_server, None, CONNECT_TIMEOUT).await
     }
 
     async fn query_online_states_(

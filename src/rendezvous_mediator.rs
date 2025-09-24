@@ -285,15 +285,32 @@ impl RendezvousMediator {
                 update_latency();
                 match rpr.result.enum_value() {
                     Ok(register_pk_response::Result::OK) => {
+                        log::info!("RegisterPkResponse::OK received from {}, confirming keys", self.host_prefix);
                         Config::set_key_confirmed(true);
                         Config::set_host_key_confirmed(&self.host_prefix, true);
                         *SOLVING_PK_MISMATCH.lock().await = "".to_owned();
                     }
                     Ok(register_pk_response::Result::UUID_MISMATCH) => {
+                        log::warn!("RegisterPkResponse::UUID_MISMATCH received from {}", self.host_prefix);
                         self.handle_uuid_mismatch(sink).await?;
                     }
+                    Ok(register_pk_response::Result::ID_EXISTS) => {
+                        log::error!("RegisterPkResponse::ID_EXISTS received from {} - ID already exists", self.host_prefix);
+                    }
+                    Ok(register_pk_response::Result::TOO_FREQUENT) => {
+                        log::warn!("RegisterPkResponse::TOO_FREQUENT received from {} - registration too frequent", self.host_prefix);
+                    }
+                    Ok(register_pk_response::Result::NOT_SUPPORT) => {
+                        log::error!("RegisterPkResponse::NOT_SUPPORT received from {} - server does not support registration", self.host_prefix);
+                    }
+                    Ok(register_pk_response::Result::SERVER_ERROR) => {
+                        log::error!("RegisterPkResponse::SERVER_ERROR received from {} - server internal error", self.host_prefix);
+                    }
+                    Ok(register_pk_response::Result::INVALID_ID_FORMAT) => {
+                        log::error!("RegisterPkResponse::INVALID_ID_FORMAT received from {} - invalid ID format", self.host_prefix);
+                    }
                     _ => {
-                        log::error!("unknown RegisterPkResponse");
+                        log::error!("Unknown RegisterPkResponse received from {}: {:?}", self.host_prefix, rpr.result);
                     }
                 }
                 if rpr.keep_alive > 0 {
@@ -678,13 +695,32 @@ impl RendezvousMediator {
             return Ok(());
         }
         drop(solving);
-        if !Config::get_key_confirmed() || !Config::get_host_key_confirmed(&self.host_prefix) {
+        
+        // 检查密钥确认状态
+        let key_confirmed = Config::get_key_confirmed();
+        let host_key_confirmed = Config::get_host_key_confirmed(&self.host_prefix);
+        
+        if !key_confirmed || !host_key_confirmed {
             log::info!(
-                "register_pk of {} due to key not confirmed",
-                self.host_prefix
+                "register_pk of {} due to key not confirmed (global: {}, host: {})",
+                self.host_prefix, key_confirmed, host_key_confirmed
             );
-            return self.register_pk(socket).await;
+            
+            // 尝试 register_pk
+            match self.register_pk(socket).await {
+                Ok(_) => {
+                    log::debug!("register_pk completed successfully for {}", self.host_prefix);
+                    // 注意：密钥确认状态将在收到 RegisterPkResponse::OK 时设置
+                }
+                Err(e) => {
+                    log::error!("register_pk failed for {}: {}", self.host_prefix, e);
+                    return Err(e);
+                }
+            }
+            return Ok(());
         }
+        
+        // 正常的 register_peer 流程
         let id = Config::get_id();
         log::trace!(
             "Register my id {:?} to rendezvous server {:?}",
