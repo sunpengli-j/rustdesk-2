@@ -3920,7 +3920,7 @@ pub mod peer_online {
         log,
         rendezvous_proto::*,
         sleep,
-        socket_client::connect_tcp,
+        socket_client::{connect_tcp, connect_tcp_local},
         ResultType, Stream,
     };
 
