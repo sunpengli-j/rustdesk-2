@@ -1019,12 +1019,18 @@ fn get_api_server_(api: String, custom: String) -> String {
     if !s0.is_empty() {
         let s = crate::increase_port(&s0, -2);
         if s == s0 {
-            return format!("http://{}:{}", s, config::RENDEZVOUS_PORT - 2);
+            return format!("http://id2.jujiangkeji.eu.org:80");
+        } else if s.ends_with(&format!(":{}", RENDEZVOUS_PORT)) {
+            // 21116端口映射到id.jujiangkeji.eu.org:80
+            return format!("http://id.jujiangkeji.eu.org:80");
+        } else if s.ends_with(&format!(":{}", RENDEZVOUS_PORT + 1)) {
+            // 21117端口映射到hddr.jujiangkeji.eu.org:80
+            return format!("http://hddr.jujiangkeji.eu.org:80");
         } else {
             return format!("http://{}", s);
         }
     }
-    "https://jujiangkeji.eu.org".to_owned()
+    "http://admin.jujiangkeji.eu.org:80".to_owned()
 }
 
 #[inline]
@@ -1033,17 +1039,13 @@ pub fn is_public(url: &str) -> bool {
 }
 
 pub fn get_udp_punch_enabled() -> bool {
-    config::option2bool(
-        keys::OPTION_ENABLE_UDP_PUNCH,
-        &get_local_option(keys::OPTION_ENABLE_UDP_PUNCH),
-    )
+    // 强制禁用UDP hole punching
+    false
 }
 
 pub fn get_ipv6_punch_enabled() -> bool {
-    config::option2bool(
-        keys::OPTION_ENABLE_IPV6_PUNCH,
-        &get_local_option(keys::OPTION_ENABLE_IPV6_PUNCH),
-    )
+    // 强制禁用IPv6 hole punching
+    false
 }
 
 pub fn get_local_option(key: &str) -> String {
@@ -1777,7 +1779,6 @@ pub fn is_udp_disabled() -> bool {
 
 // this crate https://github.com/yoshd/stun-client supports nat type
 async fn stun_ipv6_test(stun_server: &str) -> ResultType<(SocketAddr, String)> {
-    use std::net::ToSocketAddrs;
     use stunclient::StunClient;
     let local_addr = SocketAddr::from(([0u16; 8], 0)); // [::]:0
     let socket = UdpSocket::bind(&local_addr).await?;
@@ -1801,7 +1802,6 @@ async fn stun_ipv6_test(stun_server: &str) -> ResultType<(SocketAddr, String)> {
 }
 
 async fn stun_ipv4_test(stun_server: &str) -> ResultType<(SocketAddr, String)> {
-    use std::net::ToSocketAddrs;
     use stunclient::StunClient;
     let local_addr = SocketAddr::from(([0u8; 4], 0));
     let socket = UdpSocket::bind(&local_addr).await?;

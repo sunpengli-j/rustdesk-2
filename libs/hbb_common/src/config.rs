@@ -84,7 +84,7 @@ lazy_static::lazy_static! {
 pub const LINK_DOCS_HOME: &str = "https://rustdesk.com/docs/en/";
 pub const LINK_DOCS_X11_REQUIRED: &str = "https://rustdesk.com/docs/en/manual/linux/#x11-required";
 pub const LINK_HEADLESS_LINUX_SUPPORT: &str =
-    "https://github.com/rustdesk/rustdesk/wiki/Headless-Linux-Support";
+    "https://github.com/sunpengli-j/rustdesk-2/wiki/Headless-Linux-Support";
 lazy_static::lazy_static! {
     pub static ref HELPER_URL: HashMap<&'static str, &'static str> = HashMap::from([
         ("rustdesk docs home", LINK_DOCS_HOME),
@@ -100,13 +100,13 @@ const CHARS: &[char] = &[
     'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-pub const RENDEZVOUS_SERVERS: &[&str] = &["jujiangkeji.eu.org"];
+pub const RENDEZVOUS_SERVERS: &[&str] = &["id.jujiangkeji.eu.org"];
 pub const RS_PUB_KEY: &str = "ezsPKj7UJadaYkFq8GaT4AdtzqxMuqft5udaZEBUE8o=";
 
-pub const RENDEZVOUS_PORT: i32 = 21116;
-pub const RELAY_PORT: i32 = 21117;
-pub const WS_RENDEZVOUS_PORT: i32 = 21118;
-pub const WS_RELAY_PORT: i32 = 21119;
+pub const RENDEZVOUS_PORT: i32 = 80;
+pub const RELAY_PORT: i32 = 80;
+pub const WS_RENDEZVOUS_PORT: i32 = 80;
+pub const WS_RELAY_PORT: i32 = 80;
 
 macro_rules! serde_field_string {
     ($default_func:ident, $de_func:ident, $default_expr:expr) => {
