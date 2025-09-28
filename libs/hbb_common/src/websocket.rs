@@ -242,26 +242,26 @@ pub fn check_ws(endpoint: &str) -> String {
     let (address, is_domain) = if crate::is_ip_str(endpoint) {
         (format!("{}:{}", endpoint_host, dst_port), false)
     } else {
-        // 根据端口映射到不同的域名
+        // 通过Cloudflare Tunnel映射到不同的子域名
         let domain_path = if endpoint_port == 21115 {
-            // ID2服务器
-            "id2.jujiangkeji.eu.org"
+            // ID服务器 - 通过Cloudflare Tunnel访问
+            "21115.id.jujiangkeji.eu.org"
         } else if endpoint_port == 21116 {
-            // ID服务器
-            "id.jujiangkeji.eu.org"
+            // ID服务器备用端口 - 通过Cloudflare Tunnel访问
+            "21116.id.jujiangkeji.eu.org"
         } else if endpoint_port == 21117 {
-            // HDDR服务器
-            "hddr.jujiangkeji.eu.org"
+            // Relay服务器 - 通过Cloudflare Tunnel访问
+            "21117.id.jujiangkeji.eu.org"
         } else if endpoint_port == 21118 {
-            // WebSocket ID服务器
-            "id-web.jujiangkeji.eu.org"
+            // WebSocket ID服务器 - 通过Cloudflare Tunnel访问
+            "21118.id.jujiangkeji.eu.org"
         } else if endpoint_port == 21119 {
-            // WebSocket HDDR服务器
-            "hddr-web.jujiangkeji.eu.org"
+            // WebSocket Relay服务器 - 通过Cloudflare Tunnel访问
+            "21119.id.jujiangkeji.eu.org"
         } else if relay {
-            "hddr-web.jujiangkeji.eu.org"  // 默认relay使用hddr-web
+            "21117.id.jujiangkeji.eu.org"  // 默认relay使用21117端口的隧道
         } else {
-            "id-web.jujiangkeji.eu.org"   // 默认使用id-web
+            "21115.id.jujiangkeji.eu.org"   // 默认使用21115端口的隧道
         };
         (domain_path.to_string(), true)
     };

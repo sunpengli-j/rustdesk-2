@@ -147,6 +147,22 @@ pub async fn connect_tcp_local<
     local: Option<SocketAddr>,
     ms_timeout: u64,
 ) -> ResultType<Stream> {
+    // 检查是否需要通过Cloudflare Tunnel连接
+    let target_str = target.to_string();
+    let tunnel_target = check_tunnel_mapping(&target_str);
+    
+    if let Some(tunnel_addr) = tunnel_target {
+        // 使用隧道地址连接
+        if let Some(conf) = Config::get_socks() {
+            return Ok(Stream::Tcp(
+                FramedStream::connect(tunnel_addr, local, &conf, ms_timeout).await?,
+            ));
+        }
+        return Ok(Stream::Tcp(
+            FramedStream::new(tunnel_addr, local, ms_timeout).await?,
+        ));
+    }
+
     if let Some(conf) = Config::get_socks() {
         return Ok(Stream::Tcp(
             FramedStream::connect(target, local, &conf, ms_timeout).await?,
@@ -167,6 +183,24 @@ pub async fn connect_tcp_local<
     Ok(Stream::Tcp(
         FramedStream::new(target, local, ms_timeout).await?,
     ))
+}
+
+// 检查是否需要通过Cloudflare Tunnel映射
+fn check_tunnel_mapping(target: &str) -> Option<String> {
+    // 解析目标地址和端口
+    if let Some((host, port)) = split_host_port(target) {
+        // 检查是否为需要隧道映射的端口
+        match port {
+            21115 => Some("21115.id.jujiangkeji.eu.org:443".to_string()),
+            21116 => Some("21116.id.jujiangkeji.eu.org:443".to_string()),
+            21117 => Some("21117.id.jujiangkeji.eu.org:443".to_string()),
+            21118 => Some("21118.id.jujiangkeji.eu.org:443".to_string()),
+            21119 => Some("21119.id.jujiangkeji.eu.org:443".to_string()),
+            _ => None,
+        }
+    } else {
+        None
+    }
 }
 
 #[inline]
