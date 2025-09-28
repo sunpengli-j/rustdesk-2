@@ -224,26 +224,46 @@ pub fn check_ws(endpoint: &str) -> String {
 
     let (relay, dst_port) = if endpoint_port == rendezvous_port {
         // rendezvous
-        (false, endpoint_port + 2)
+        (false, 80)  // 映射到80端口
     } else if endpoint_port == rendezvous_port - 1 {
         // online
-        (false, endpoint_port + 3)
+        (false, 80)  // 映射到80端口
     } else if endpoint_port == relay_port || endpoint_port == rendezvous_port + 1 {
         // relay
         // https://github.com/rustdesk/rustdesk/blob/6ffbcd1375771f2482ec4810680623a269be70f1/src/rendezvous_mediator.rs#L615
         // https://github.com/rustdesk/rustdesk-server/blob/235a3c326ceb665e941edb50ab79faa1208f7507/src/relay_server.rs#L83, based on relay port.
-        (true, endpoint_port + 2)
+        (true, 80)  // 映射到80端口
     } else {
         // fallback relay
         // for controlling side, relay server is passed from the controlled side, not related to local config.
-        (true, endpoint_port + 2)
+        (true, 80)  // 映射到80端口
     };
 
     let (address, is_domain) = if crate::is_ip_str(endpoint) {
         (format!("{}:{}", endpoint_host, dst_port), false)
     } else {
-        let domain_path = if relay { "/ws/relay" } else { "/ws/id" };
-        (format!("{}{}", endpoint_host, domain_path), true)
+        // 根据端口映射到不同的域名
+        let domain_path = if endpoint_port == 21115 {
+            // ID2服务器
+            "id2.jujiangkeji.eu.org"
+        } else if endpoint_port == 21116 {
+            // ID服务器
+            "id.jujiangkeji.eu.org"
+        } else if endpoint_port == 21117 {
+            // HDDR服务器
+            "hddr.jujiangkeji.eu.org"
+        } else if endpoint_port == 21118 {
+            // WebSocket ID服务器
+            "id-web.jujiangkeji.eu.org"
+        } else if endpoint_port == 21119 {
+            // WebSocket HDDR服务器
+            "hddr-web.jujiangkeji.eu.org"
+        } else if relay {
+            "hddr-web.jujiangkeji.eu.org"  // 默认relay使用hddr-web
+        } else {
+            "id-web.jujiangkeji.eu.org"   // 默认使用id-web
+        };
+        (domain_path.to_string(), true)
     };
     let protocol = if is_domain {
         let api_server = Config::get_option("api-server");
