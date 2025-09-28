@@ -113,10 +113,27 @@ pub fn global_init() -> bool {
             crate::server::wayland::init();
         }
     }
+    
+    // 初始化UDP禁用设置
+    init_udp_disabled();
+    
     true
 }
 
 pub fn global_clean() {}
+
+/// 初始化UDP禁用设置
+fn init_udp_disabled() {
+    use hbb_common::config::{BUILTIN_SETTINGS, keys::OPTION_DISABLE_UDP};
+    
+    // 设置disable-udp选项为Y以禁用UDP连接
+    if let Ok(mut settings) = BUILTIN_SETTINGS.write() {
+        settings.insert(OPTION_DISABLE_UDP.to_string(), "Y".to_string());
+        log::info!("UDP connections disabled via BUILTIN_SETTINGS");
+    } else {
+        log::error!("Failed to set UDP disable option in BUILTIN_SETTINGS");
+    }
+}
 
 #[inline]
 pub fn set_server_running(b: bool) {
@@ -1019,18 +1036,18 @@ fn get_api_server_(api: String, custom: String) -> String {
     if !s0.is_empty() {
         let s = crate::increase_port(&s0, -2);
         if s == s0 {
-            return format!("http://id2.jujiangkeji.eu.org:80");
+            return format!("https://jujiangkeji.eu.org");
         } else if s.ends_with(&format!(":{}", RENDEZVOUS_PORT)) {
             // 21116端口映射到id.jujiangkeji.eu.org:80
-            return format!("http://id.jujiangkeji.eu.org:80");
+            return format!("https://jujiangkeji.eu.org");
         } else if s.ends_with(&format!(":{}", RENDEZVOUS_PORT + 1)) {
             // 21117端口映射到hddr.jujiangkeji.eu.org:80
-            return format!("http://hddr.jujiangkeji.eu.org:80");
+            return format!("https://jujiangkeji.eu.org");
         } else {
-            return format!("http://{}", s);
+            return format!("https://jujiangkeji.eu.org");
         }
     }
-    "http://admin.jujiangkeji.eu.org:80".to_owned()
+    "https://jujiangkeji.eu.org".to_owned()
 }
 
 #[inline]
