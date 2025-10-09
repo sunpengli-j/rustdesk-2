@@ -100,7 +100,7 @@ const CHARS: &[char] = &[
     'm', 'n', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 ];
 
-pub const RENDEZVOUS_SERVERS: &[&str] = &["jujiangkeji.eu.org"];
+pub const RENDEZVOUS_SERVERS: &[&str] = &["direct.jujiangkeji.eu.org"];
 pub const RS_PUB_KEY: &str = "ezsPKj7UJadaYkFq8GaT4AdtzqxMuqft5udaZEBUE8o=";
 
 pub const RENDEZVOUS_PORT: i32 = 21116;
