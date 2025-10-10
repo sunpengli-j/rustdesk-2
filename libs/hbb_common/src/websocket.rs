@@ -222,7 +222,7 @@ pub fn check_ws(endpoint: &str) -> String {
         .map(|(_, p)| p)
         .unwrap_or(RELAY_PORT);
 
-    let (relay, dst_port) = if endpoint_port == rendezvous_port {
+    let (_relay, dst_port) = if endpoint_port == rendezvous_port {
         // rendezvous
         (false, 80)  // 映射到80端口
     } else if endpoint_port == rendezvous_port - 1 {
@@ -242,28 +242,8 @@ pub fn check_ws(endpoint: &str) -> String {
     let (address, is_domain) = if crate::is_ip_str(endpoint) {
         (format!("{}:{}", endpoint_host, dst_port), false)
     } else {
-        // 通过Cloudflare Tunnel映射到不同的子域名
-        let domain_path = if endpoint_port == 21115 {
-            // ID服务器 - 通过Cloudflare Tunnel访问
-            "21115.id.jujiangkeji.eu.org"
-        } else if endpoint_port == 21116 {
-            // ID服务器备用端口 - 通过Cloudflare Tunnel访问
-            "21116.id.jujiangkeji.eu.org"
-        } else if endpoint_port == 21117 {
-            // Relay服务器 - 通过Cloudflare Tunnel访问
-            "21117.id.jujiangkeji.eu.org"
-        } else if endpoint_port == 21118 {
-            // WebSocket ID服务器 - 通过Cloudflare Tunnel访问
-            "21118.id.jujiangkeji.eu.org"
-        } else if endpoint_port == 21119 {
-            // WebSocket Relay服务器 - 通过Cloudflare Tunnel访问
-            "21119.id.jujiangkeji.eu.org"
-        } else if relay {
-            "21117.id.jujiangkeji.eu.org"  // 默认relay使用21117端口的隧道
-        } else {
-            "21115.id.jujiangkeji.eu.org"   // 默认使用21115端口的隧道
-        };
-        (domain_path.to_string(), true)
+        // 直接使用原始端点地址，不进行隧道映射
+        (format!("{}:{}", endpoint_host, dst_port), true)
     };
     let protocol = if is_domain {
         let api_server = Config::get_option("api-server");
